@@ -1,0 +1,28 @@
+name = "kperfect-booking-api"
+main = "worker/src/index.ts"
+compatibility_date = "2026-06-26"
+
+[vars]
+APP_ENV = "production"
+FRONTEND_URL = "https://kperfect-booking.pages.dev"
+CORS_ORIGIN = "https://kperfect-booking.pages.dev"
+BRANCH_NAME = "K Perfect Nimman"
+SHOP_TIMEZONE = "Asia/Bangkok"
+SHOP_OPEN_TIME = "09:00"
+SHOP_CLOSE_TIME = "20:00"
+SERVICE_DURATION_MINUTES = "120"
+SLOT_INTERVAL_MINUTES = "60"
+MAX_ONLINE_SEATS = "2"
+MAX_BOOKINGS_PER_USER = "2"
+MAX_ADVANCE_DAYS = "7"
+ALLOW_SAME_DAY_BOOKING = "false"
+ENABLE_DEV_AUTH = "false"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "kperfect-booking-db"
+database_id = "REPLACE_WITH_CLOUDFLARE_D1_DATABASE_ID"
+migrations_dir = "database/migrations"
+
+[triggers]
+crons = ["0 1 * * *"]

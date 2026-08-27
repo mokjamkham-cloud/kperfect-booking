@@ -21,7 +21,7 @@ ENABLE_DEV_AUTH = "false"
 [[d1_databases]]
 binding = "DB"
 database_name = "kperfect-booking-db"
-database_id = "REPLACE_WITH_CLOUDFLARE_D1_DATABASE_ID"
+database_id = "ded6edac-c92f-4ed8-b868-0d1dd20bf52c"
 migrations_dir = "database/migrations"
 
 [triggers]

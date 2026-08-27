@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # K Perfect Nails Online Booking
 
 ระบบจองคิวออนไลน์สำหรับ **K Perfect Nails and Spa สาขา K Perfect Nimman** ใช้ Next.js 15 เป็น frontend, Cloudflare Workers เป็น API, Cloudflare D1 เป็นฐานข้อมูล, LINE Login สำหรับลูกค้า และ LINE Messaging API สำหรับแจ้งเตือนทีมร้าน
@@ -245,3 +246,7 @@ npm run build
 - Cloudflare Workers secrets: https://developers.cloudflare.com/workers/configuration/secrets/
 - LINE Login web app: https://developers.line.biz/en/docs/line-login/integrate-line-login/
 - LINE Messaging API sending messages: https://developers.line.biz/en/docs/messaging-api/sending-messages/
+=======
+# kperfect-booking
+kperfect-booking
+>>>>>>> 9d24ee4f085d6c0d77f5d26c1f6ce35fcf5d3eac

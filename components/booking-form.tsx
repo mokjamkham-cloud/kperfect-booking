@@ -105,10 +105,10 @@ export function BookingForm() {
 
   if (!user) {
     return (
-      <Card>
-        <CardHeader title="กรุณาเข้าสู่ระบบก่อนจอง" description="ระบบรับจองออนไลน์ผ่าน LINE Login เพื่อผูกคิวกับบัญชีลูกค้า" />
-        <Notice tone="info">ใช้ปุ่ม LINE Login ด้านบน หรือปุ่มทดลองสำหรับทดสอบบนเครื่อง local</Notice>
-      </Card>
+        <Card>
+          <CardHeader title="กรุณาเข้าสู่ระบบก่อนจอง" description="ระบบรับจองออนไลน์ผ่าน LINE Login เพื่อผูกคิวกับบัญชีลูกค้า" />
+          <Notice tone="info">ใช้ปุ่ม LINE Login ด้านบนเพื่อเข้าสู่ระบบก่อนจองคิว</Notice>
+        </Card>
     );
   }
 

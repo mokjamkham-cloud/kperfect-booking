@@ -73,7 +73,7 @@ export async function handleSlots(request: Request, env: Env) {
   return jsonResponse({ slots }, request, env);
 }
 
-export async function handleCreateBooking(request: Request, env: Env) {
+export async function handleCreateBooking(request: Request, env: Env, ctx: ExecutionContext) {
   const user = await requireUser(request, env);
   const config = getBookingConfig(env);
   const payload = await readJson<BookingPayload>(request);
@@ -124,7 +124,21 @@ export async function handleCreateBooking(request: Request, env: Env) {
     notes: cleanText(payload.notes, 300) || null,
   });
 
-  await Promise.allSettled([sendBookingConfirmation(env, user, booking), sendBookingNoticeToGroup(env, booking)]);
+  ctx.waitUntil(
+    Promise.allSettled([sendBookingConfirmation(env, user, booking), sendBookingNoticeToGroup(env, booking)]).then((results) => {
+      for (const result of results) {
+        if (result.status === "rejected") {
+          console.error(
+            JSON.stringify({
+              event: "booking_notification_failed",
+              reason: result.reason instanceof Error ? result.reason.message : String(result.reason),
+            }),
+          );
+        }
+      }
+    }),
+  );
+
   return jsonResponse({ booking }, request, env, { status: 201 });
 }
 

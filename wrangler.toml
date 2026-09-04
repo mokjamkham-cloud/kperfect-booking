@@ -1,11 +1,17 @@
 name = "kperfect-booking-api"
 main = "worker/src/index.ts"
-compatibility_date = "2026-06-26"
+compatibility_date = "2026-09-04"
+workers_dev = true
+preview_urls = true
+
+[observability]
+enabled = true
+head_sampling_rate = 1
 
 [vars]
 APP_ENV = "production"
-FRONTEND_URL = "https://kperfect-booking.pages.dev"
-CORS_ORIGIN = "https://kperfect-booking.pages.dev"
+FRONTEND_URL = "https://kperfect-booking-api.mokjamkham.workers.dev"
+CORS_ORIGIN = "https://kperfect-booking-api.mokjamkham.workers.dev,https://kperfect-booking.pages.dev"
 BRANCH_NAME = "K Perfect Nimman"
 SHOP_TIMEZONE = "Asia/Bangkok"
 SHOP_OPEN_TIME = "09:00"
@@ -18,11 +24,29 @@ MAX_ADVANCE_DAYS = "7"
 ALLOW_SAME_DAY_BOOKING = "false"
 ENABLE_DEV_AUTH = "false"
 
+[secrets]
+required = [
+  "ADMIN_API_KEY",
+  "SESSION_SECRET",
+  "LINE_LOGIN_CHANNEL_ID",
+  "LINE_LOGIN_CHANNEL_SECRET",
+  "LINE_LOGIN_REDIRECT_URI",
+  "LINE_MESSAGING_CHANNEL_ACCESS_TOKEN",
+  "LINE_MESSAGING_CHANNEL_SECRET"
+]
+
 [[d1_databases]]
 binding = "DB"
 database_name = "kperfect-booking-db"
 database_id = "ded6edac-c92f-4ed8-b868-0d1dd20bf52c"
 migrations_dir = "database/migrations"
+
+[assets]
+directory = "./out"
+binding = "ASSETS"
+html_handling = "auto-trailing-slash"
+not_found_handling = "404-page"
+run_worker_first = ["/api/*"]
 
 [triggers]
 crons = ["0 1 * * *"]

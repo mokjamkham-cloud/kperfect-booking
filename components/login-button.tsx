@@ -3,6 +3,7 @@
 import { LogIn, LogOut, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/config";
 import type { UserProfile } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 
@@ -10,6 +11,7 @@ export function LoginButton() {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [showDemoLogin, setShowDemoLogin] = useState(false);
 
   async function refreshUser() {
     try {
@@ -23,17 +25,13 @@ export function LoginButton() {
   }
 
   useEffect(() => {
+    setShowDemoLogin(["localhost", "127.0.0.1"].includes(window.location.hostname));
     refreshUser();
   }, []);
 
   async function loginWithLine() {
     setMessage("");
-    try {
-      const { url } = await api.getLineLoginUrl();
-      window.location.href = url;
-    } catch (error) {
-      setMessage(error instanceof Error ? error.message : "ยังไม่สามารถเปิด LINE Login ได้");
-    }
+    window.location.href = `${API_BASE_URL}/api/auth/line/start`;
   }
 
   async function loginAsDemo() {
@@ -74,9 +72,11 @@ export function LoginButton() {
             <LogIn className="h-4 w-4" aria-hidden="true" />
             LINE Login
           </Button>
-          <Button type="button" variant="secondary" onClick={loginAsDemo}>
-            ทดลอง
-          </Button>
+          {showDemoLogin ? (
+            <Button type="button" variant="secondary" onClick={loginAsDemo}>
+              ทดลอง
+            </Button>
+          ) : null}
         </>
       )}
       {message ? <span className="basis-full text-right text-xs text-red-600">{message}</span> : null}

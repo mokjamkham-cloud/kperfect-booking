@@ -1,12 +1,21 @@
-<<<<<<< HEAD
 # K Perfect Nails Online Booking
 
-ระบบจองคิวออนไลน์สำหรับ **K Perfect Nails and Spa สาขา K Perfect Nimman** ใช้ Next.js 15 เป็น frontend, Cloudflare Workers เป็น API, Cloudflare D1 เป็นฐานข้อมูล, LINE Login สำหรับลูกค้า และ LINE Messaging API สำหรับแจ้งเตือนทีมร้าน
+ระบบจองคิวออนไลน์สำหรับ **K Perfect Nails and Spa สาขา K Perfect Nimman** ใช้ Next.js 15 เป็น frontend, Cloudflare Workers เป็น API และ web hosting, Cloudflare D1 เป็นฐานข้อมูล, LINE Login สำหรับลูกค้า และ LINE Messaging API สำหรับแจ้งเตือนทีมร้าน
+
+## Production URLs
+
+- Website + API: `https://kperfect-booking-api.mokjamkham.workers.dev`
+- Cloudflare Pages mirror: `https://kperfect-booking.pages.dev`
+- LINE Login callback: `https://kperfect-booking-api.mokjamkham.workers.dev/api/auth/line/callback`
+- LINE webhook: `https://kperfect-booking-api.mokjamkham.workers.dev/api/line/webhook`
+
+แนะนำให้ใช้ URL หลักของ Worker สำหรับเว็บจริง เพราะ frontend และ API อยู่โดเมนเดียวกัน ทำให้ session cookie ของ LINE Login เสถียรกว่า และยังไม่ต้องซื้อ domain
 
 ## สิ่งที่ทำไว้ในโปรเจกต์
 
-- Next.js 15 แบบ static export สำหรับ Cloudflare Pages
+- Next.js 15 แบบ static export
 - Cloudflare Worker API พร้อม CORS, session cookie, LINE Login callback และ admin key
+- Cloudflare Workers Static Assets สำหรับเสิร์ฟหน้าเว็บจาก Worker เดียวกับ API
 - Cloudflare D1 schema/migration สำหรับ users, bookings และ app settings
 - Booking rules ฝั่ง backend: จองล่วงหน้า 1-7 วัน, ไม่รับ same-day, รอบละ 2 ชั่วโมง, online capacity 2 ที่, ลูกค้า 1 คนมี active booking ได้สูงสุด 2 คิว
 - หน้า booking, my bookings, admin dashboard และ responsive UI
@@ -20,18 +29,19 @@ components/           UI และ feature components
 lib/                  frontend API client, config, date helpers, types
 worker/src/           Cloudflare Worker API
 database/             D1 schema, migrations, seed data
-wrangler.toml         Cloudflare Worker + D1 binding + cron config
+scripts/              helper scripts สำหรับ build/deploy
+wrangler.toml         Cloudflare Worker + Static Assets + D1 binding + cron config
 ```
 
 ## เตรียมเครื่อง local
 
-ต้องมี Node.js 20+ และ Cloudflare Wrangler ผ่าน dependency ของโปรเจกต์
+ต้องมี Node.js 20+ แล้วติดตั้ง dependency:
 
 ```bash
 npm install
 ```
 
-สร้างไฟล์ `.env.local` สำหรับ Next.js:
+สร้างไฟล์ `.env.local` สำหรับ Next.js local:
 
 ```bash
 NEXT_PUBLIC_API_BASE_URL=http://localhost:8787
@@ -67,30 +77,12 @@ MAX_ADVANCE_DAYS=7
 ALLOW_SAME_DAY_BOOKING=false
 ```
 
-รัน D1 local migration และ seed:
+รัน D1 local migration และเปิด dev servers:
 
 ```bash
 npm run db:migrate:local
 npm run db:seed:local
-```
-
-เปิด Worker:
-
-```bash
 npm run dev:worker
-```
-
-ถ้า Worker แจ้งว่า port `8787` ถูกใช้งานอยู่ ให้ปิด terminal ที่รัน Worker เก่า หรือบน Windows ใช้คำสั่งนี้เพื่อดู process:
-
-```powershell
-netstat -ano | findstr :8787
-```
-
-จากนั้นหยุด process นั้น หรือปิด terminal เดิม แล้วรัน `npm run dev:worker` ใหม่
-
-เปิด Next.js อีก terminal:
-
-```bash
 npm run dev
 ```
 
@@ -98,28 +90,38 @@ npm run dev
 
 ## Deploy ทีละขั้น
 
-### 1. สร้าง GitHub repository
+### 1. Login Cloudflare
 
-1. เข้า GitHub แล้วกด New repository
-2. ตั้งชื่อ เช่น `kperfect-booking`
-3. อัปโหลดโค้ดทั้งโปรเจกต์นี้เข้า repository
-4. ตรวจว่าไม่มีไฟล์ `.env.local`, `.dev.vars`, `.env` ถูกอัปโหลด
+```bash
+npx wrangler whoami
+```
 
-### 2. สร้าง Cloudflare D1
-
-Login Wrangler:
+ถ้ายังไม่ได้ login:
 
 ```bash
 npx wrangler login
 ```
 
-สร้าง database:
+ถ้า browser login ใช้ไม่ได้ ให้ใช้ device flow:
+
+```bash
+npx wrangler login --device --browser=false
+```
+
+### 2. สร้างหรือเช็ก Cloudflare D1
+
+ตอนนี้ config ใช้ database นี้:
+
+```txt
+kperfect-booking-db
+ded6edac-c92f-4ed8-b868-0d1dd20bf52c
+```
+
+ถ้ายังไม่มี database ให้สร้างใหม่ แล้วนำ `database_id` ที่ได้ไปใส่ใน `wrangler.toml`:
 
 ```bash
 npx wrangler d1 create kperfect-booking-db
 ```
-
-นำ `database_id` ที่ได้ไปใส่ใน `wrangler.toml` ตรง `database_id`
 
 รัน migration บน Cloudflare:
 
@@ -142,68 +144,60 @@ npx wrangler secret put LINE_MESSAGING_CHANNEL_SECRET
 npx wrangler secret put LINE_GROUP_ID
 ```
 
-ค่า `LINE_LOGIN_REDIRECT_URI` ต้องเป็น URL จริงของ Worker เช่น:
+ค่า `LINE_LOGIN_REDIRECT_URI` ต้องเป็น:
 
 ```txt
-https://kperfect-booking-api.your-account.workers.dev/api/auth/line/callback
+https://kperfect-booking-api.mokjamkham.workers.dev/api/auth/line/callback
 ```
 
-Deploy Worker:
+### 4. Deploy website + API ไป Cloudflare Workers
+
+คำสั่งนี้จะ build Next.js ด้วย production URL แล้ว deploy ทั้งหน้าเว็บ static, Worker API, D1 binding และ cron:
 
 ```bash
-npm run deploy:worker
+npm run deploy:site
 ```
 
-### 4. Deploy Next.js บน Cloudflare Pages
+หลัง deploy เปิด:
 
-1. เข้า Cloudflare Dashboard
-2. ไปที่ Workers & Pages
-3. เลือก Create application
-4. เลือก Pages แล้ว Connect to Git
-5. เลือก GitHub repository ของโปรเจกต์
-6. ตั้งค่า build:
-   - Framework preset: Next.js
-   - Build command: `npm run build`
-   - Build output directory: `out`
-7. ตั้ง Environment variables:
-   - `NEXT_PUBLIC_API_BASE_URL=https://<worker-url>`
-   - `NEXT_PUBLIC_SITE_URL=https://<pages-url>`
-8. กด Deploy
+```txt
+https://kperfect-booking-api.mokjamkham.workers.dev
+```
 
 ### 5. ตั้งค่า LINE Login
 
 1. เข้า LINE Developers Console
-2. สร้าง Provider และ LINE Login Channel
+2. เลือก LINE Login Channel
 3. ใน Callback URL ใส่:
 
 ```txt
-https://<worker-url>/api/auth/line/callback
+https://kperfect-booking-api.mokjamkham.workers.dev/api/auth/line/callback
 ```
 
-4. คัดลอก Channel ID และ Channel secret ไปใส่ใน Worker secrets
-5. ตรวจว่า scope ที่ใช้คือ `profile openid`
+4. ตรวจว่า Channel ID และ Channel secret ตรงกับ Worker secrets
+5. Scope ที่ใช้คือ `profile openid`
 
 ### 6. ตั้งค่า LINE Messaging API
 
-1. สร้าง Messaging API Channel ใน LINE Developers
-2. เปิด Webhook และตั้ง Webhook URL:
+1. เข้า LINE Developers Console
+2. เลือก Messaging API Channel
+3. เปิด Webhook และตั้ง Webhook URL:
 
 ```txt
-https://<worker-url>/api/line/webhook
+https://kperfect-booking-api.mokjamkham.workers.dev/api/line/webhook
 ```
 
-3. นำ Channel access token และ Channel secret ไปใส่ Worker secrets
-4. เชิญ LINE Official Account เข้ากลุ่มร้าน
-5. ส่งข้อความ `groupid` ในกลุ่มหนึ่งครั้ง ระบบจะบันทึก group id ลง D1 อัตโนมัติ
-
-ถ้าต้องการตั้งแบบ manual ให้ใส่ `LINE_GROUP_ID` เป็น secret ได้เลย
+4. นำ Channel access token และ Channel secret ไปใส่ Worker secrets
+5. เชิญ LINE Official Account เข้ากลุ่มร้าน
+6. ส่งข้อความ `groupid` ในกลุ่มหนึ่งครั้ง ระบบจะบันทึก group id ลง D1 อัตโนมัติ
 
 ## API หลัก
 
 | Method | Path | ใช้ทำอะไร |
 | --- | --- | --- |
 | GET | `/api/config` | อ่าน config ร้าน |
-| GET | `/api/auth/line/url` | สร้าง LINE Login URL |
+| GET | `/api/auth/line/start` | เริ่ม LINE Login แบบ redirect |
+| GET | `/api/auth/line/url` | สร้าง LINE Login URL แบบ JSON |
 | GET | `/api/auth/line/callback` | รับ callback จาก LINE |
 | POST | `/api/auth/dev-login` | login ทดลองเฉพาะ local |
 | GET | `/api/me` | อ่าน user session |
@@ -216,37 +210,22 @@ https://<worker-url>/api/line/webhook
 | POST | `/api/admin/notify-today` | ส่งสรุปคิววันนี้เข้า LINE Group |
 | POST | `/api/line/webhook` | รับ webhook จาก LINE |
 
-## ปรับค่าร้าน
-
-ค่าที่แก้บ่อยอยู่ใน `.env.example`, `.dev.vars`, `wrangler.toml` และ Cloudflare Worker variables/secrets:
-
-- `BRANCH_NAME`
-- `SHOP_OPEN_TIME`
-- `SHOP_CLOSE_TIME`
-- `SERVICE_DURATION_MINUTES`
-- `SLOT_INTERVAL_MINUTES`
-- `MAX_ONLINE_SEATS`
-- `MAX_BOOKINGS_PER_USER`
-- `MAX_ADVANCE_DAYS`
-- `ALLOW_SAME_DAY_BOOKING`
-
-Frontend fallback อยู่ที่ `lib/config.ts` เพื่อให้ UI แสดงข้อมูลตรงกับค่าเริ่มต้น
-
 ## ตรวจคุณภาพก่อน deploy
 
 ```bash
 npm run typecheck
-npm run build
+npm run build:cloudflare
 ```
+
+## หมายเหตุเรื่องค่าใช้จ่าย
+
+Cloudflare Workers Free มีโควตา request รายวัน และ D1 Free มีโควตา rows read/write กับ storage ที่เหมาะกับเว็บจองร้านเล็กช่วงเริ่มต้น ถ้า traffic โตมากจนเกิน free quota ระบบจะเริ่มตอบ error ตาม limit ของ Cloudflare
 
 ## เอกสารอ้างอิง
 
-- Cloudflare Pages + Next.js: https://developers.cloudflare.com/pages/framework-guides/nextjs/
+- Cloudflare Workers Static Assets: https://developers.cloudflare.com/workers/static-assets/
+- Cloudflare Workers pricing: https://developers.cloudflare.com/workers/platform/pricing/
+- Cloudflare D1 pricing: https://developers.cloudflare.com/d1/platform/pricing/
 - Cloudflare D1 + Wrangler: https://developers.cloudflare.com/d1/wrangler-commands/
-- Cloudflare Workers secrets: https://developers.cloudflare.com/workers/configuration/secrets/
 - LINE Login web app: https://developers.line.biz/en/docs/line-login/integrate-line-login/
 - LINE Messaging API sending messages: https://developers.line.biz/en/docs/messaging-api/sending-messages/
-=======
-# kperfect-booking
-kperfect-booking
->>>>>>> 9d24ee4f085d6c0d77f5d26c1f6ce35fcf5d3eac

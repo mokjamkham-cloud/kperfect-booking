@@ -2,6 +2,7 @@ import { dateStringInTimezone } from "./config";
 import { getSetting, listAdminBookings, setSetting } from "./db";
 import type { Env } from "./env";
 import { HttpError, jsonResponse } from "./http";
+import { timingSafeEqual } from "./security";
 import type { Booking, BookingWithUser, UserProfile } from "./types";
 
 type LineEvent = {
@@ -37,7 +38,7 @@ async function verifyLineSignature(rawBody: string, signature: string | null, ch
 
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(channelSecret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
   const signed = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(rawBody));
-  return bytesToBase64(new Uint8Array(signed)) === signature;
+  return timingSafeEqual(bytesToBase64(new Uint8Array(signed)), signature);
 }
 
 async function pushLineMessage(env: Env, to: string | undefined | null, text: string) {

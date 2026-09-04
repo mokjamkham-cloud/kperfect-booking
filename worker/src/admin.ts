@@ -2,10 +2,11 @@ import { cancelBooking, getBookingById, listAdminBookings } from "./db";
 import type { Env } from "./env";
 import { HttpError, jsonResponse } from "./http";
 import { sendDailySummary } from "./line";
+import { timingSafeEqual } from "./security";
 
 function requireAdmin(request: Request, env: Env) {
   const adminKey = request.headers.get("x-admin-key");
-  if (!env.ADMIN_API_KEY || !adminKey || adminKey !== env.ADMIN_API_KEY) {
+  if (!env.ADMIN_API_KEY || !adminKey || !timingSafeEqual(adminKey, env.ADMIN_API_KEY)) {
     throw new HttpError(401, "Admin API Key ไม่ถูกต้อง");
   }
 }

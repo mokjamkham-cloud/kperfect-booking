@@ -1,5 +1,5 @@
 import { handleAdminBookings, handleAdminCancelBooking, handleNotifyToday } from "./admin";
-import { handleDevLogin, handleLineCallback, handleLineLoginUrl, handleLogout, handleMe } from "./auth";
+import { handleDevLogin, handleLineCallback, handleLineLoginStart, handleLineLoginUrl, handleLogout, handleMe } from "./auth";
 import { handleCancelMyBooking, handleCreateBooking, handleMyBookings, handleSlots } from "./bookings";
 import { getBookingConfig } from "./config";
 import type { Env } from "./env";
@@ -15,7 +15,7 @@ function matchAdminBookingCancel(pathname: string) {
 }
 
 export default {
-  async fetch(request: Request, env: Env) {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext) {
     if (request.method === "OPTIONS") {
       return optionsResponse(request, env);
     }
@@ -40,6 +40,10 @@ export default {
         return handleLineLoginUrl(request, env);
       }
 
+      if (request.method === "GET" && pathname === "/api/auth/line/start") {
+        return handleLineLoginStart(request, env);
+      }
+
       if (request.method === "GET" && pathname === "/api/auth/line/callback") {
         return handleLineCallback(request, env);
       }
@@ -61,7 +65,7 @@ export default {
       }
 
       if (request.method === "POST" && pathname === "/api/bookings") {
-        return handleCreateBooking(request, env);
+        return handleCreateBooking(request, env, ctx);
       }
 
       const bookingId = matchBookingCancel(pathname);
@@ -92,7 +96,7 @@ export default {
     }
   },
 
-  async scheduled(_event: ScheduledEvent, env: Env, ctx: ExecutionContext) {
+  async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext) {
     ctx.waitUntil(sendDailySummary(env));
   },
-};
+} satisfies ExportedHandler<Env>;

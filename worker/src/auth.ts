@@ -1,6 +1,7 @@
 import { getUserById, upsertLineUser } from "./db";
 import type { Env } from "./env";
 import { HttpError, jsonResponse, redirectResponse } from "./http";
+import { timingSafeEqual } from "./security";
 import type { LineProfile, UserProfile } from "./types";
 
 type SessionPayload = {
@@ -52,15 +53,6 @@ async function hmac(value: string, secret: string) {
   return bytesToBase64Url(new Uint8Array(signature));
 }
 
-function safeEqual(a: string, b: string) {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let index = 0; index < a.length; index += 1) {
-    diff |= a.charCodeAt(index) ^ b.charCodeAt(index);
-  }
-  return diff === 0;
-}
-
 function parseCookies(request: Request) {
   const header = request.headers.get("Cookie") || "";
   const cookies = new Map<string, string>();
@@ -108,7 +100,7 @@ async function verifySession(token: string | undefined, env: Env) {
   if (!payload || !signature) return null;
 
   const expectedSignature = await hmac(payload, env.SESSION_SECRET);
-  if (!safeEqual(signature, expectedSignature)) return null;
+  if (!timingSafeEqual(signature, expectedSignature)) return null;
 
   const session = decodeJson<SessionPayload>(payload);
   if (session.exp < Math.floor(Date.now() / 1000)) return null;
@@ -140,16 +132,32 @@ export async function handleLineLoginUrl(request: Request, env: Env) {
   }
 
   const state = crypto.randomUUID();
-  const url = new URL("https://access.line.me/oauth2/v2.1/authorize");
-  url.searchParams.set("response_type", "code");
-  url.searchParams.set("client_id", env.LINE_LOGIN_CHANNEL_ID);
-  url.searchParams.set("redirect_uri", env.LINE_LOGIN_REDIRECT_URI);
-  url.searchParams.set("state", state);
-  url.searchParams.set("scope", "profile openid");
+  const url = buildLineLoginUrl(env, state);
 
   const response = jsonResponse({ url: url.toString() }, request, env);
   setCookie(response.headers, env, LINE_STATE_COOKIE, state, 600);
   return response;
+}
+
+export async function handleLineLoginStart(request: Request, env: Env) {
+  if (!env.LINE_LOGIN_CHANNEL_ID || !env.LINE_LOGIN_CHANNEL_SECRET || !env.LINE_LOGIN_REDIRECT_URI) {
+    throw new HttpError(500, "ยังไม่ได้ตั้งค่า LINE Login");
+  }
+
+  const state = crypto.randomUUID();
+  const response = redirectResponse(buildLineLoginUrl(env, state).toString(), request, env);
+  setCookie(response.headers, env, LINE_STATE_COOKIE, state, 600);
+  return response;
+}
+
+function buildLineLoginUrl(env: Env, state: string) {
+  const url = new URL("https://access.line.me/oauth2/v2.1/authorize");
+  url.searchParams.set("response_type", "code");
+  url.searchParams.set("client_id", env.LINE_LOGIN_CHANNEL_ID || "");
+  url.searchParams.set("redirect_uri", env.LINE_LOGIN_REDIRECT_URI || "");
+  url.searchParams.set("state", state);
+  url.searchParams.set("scope", "profile openid");
+  return url;
 }
 
 async function exchangeLineCode(code: string, env: Env) {

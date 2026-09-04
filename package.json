@@ -7,9 +7,12 @@
     "dev": "next dev",
     "dev:worker": "wrangler dev --local --port 8787",
     "build": "next build",
+    "build:cloudflare": "node scripts/build-cloudflare.mjs",
     "start": "next start",
     "typecheck": "tsc --noEmit && tsc -p worker/tsconfig.json --noEmit",
+    "deploy:site": "npm run build:cloudflare && wrangler deploy",
     "deploy:worker": "wrangler deploy",
+    "deploy:pages": "npm run build:cloudflare && wrangler pages deploy out --project-name kperfect-booking --branch main --commit-dirty=true",
     "db:migrate:local": "wrangler d1 migrations apply kperfect-booking-db --local",
     "db:migrate:remote": "wrangler d1 migrations apply kperfect-booking-db --remote",
     "db:seed:local": "wrangler d1 execute kperfect-booking-db --local --file=database/seed.sql"
@@ -22,7 +25,7 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260620.0",
+    "@cloudflare/workers-types": "^5.20260903.1",
     "@types/node": "^26.0.1",
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
@@ -30,6 +33,6 @@
     "postcss": "^8.4.49",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.7.2",
-    "wrangler": "^4.21.0"
+    "wrangler": "^4.128.0"
   }
 }

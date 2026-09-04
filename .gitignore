@@ -3,6 +3,7 @@ node_modules
 out
 .vercel
 .wrangler
+.wrangler-dry-run
 .wrangler-config
 .dev.vars
 .env

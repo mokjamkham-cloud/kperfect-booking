@@ -1,10 +1,11 @@
-import { handleAdminBookings, handleAdminCancelBooking, handleNotifyToday } from "./admin";
+import { handleAdminBookings, handleAdminCancelBooking, handleNotifyToday, handlePurgeOldBookings } from "./admin";
 import { handleDevLogin, handleLineCallback, handleLineLoginStart, handleLineLoginUrl, handleLogout, handleMe } from "./auth";
 import { handleCancelMyBooking, handleCreateBooking, handleMyBookings, handleSlots } from "./bookings";
 import { getBookingConfig } from "./config";
 import type { Env } from "./env";
 import { errorResponse, jsonResponse, notFound, optionsResponse } from "./http";
 import { handleLineWebhook, sendDailySummary } from "./line";
+import { purgeExpiredBookingData } from "./maintenance";
 
 function matchBookingCancel(pathname: string) {
   return pathname.match(/^\/api\/bookings\/([^/]+)\/cancel$/)?.[1];
@@ -33,61 +34,65 @@ export default {
       }
 
       if (request.method === "GET" && pathname === "/api/me") {
-        return handleMe(request, env);
+        return await handleMe(request, env);
       }
 
       if (request.method === "GET" && pathname === "/api/auth/line/url") {
-        return handleLineLoginUrl(request, env);
+        return await handleLineLoginUrl(request, env);
       }
 
       if (request.method === "GET" && pathname === "/api/auth/line/start") {
-        return handleLineLoginStart(request, env);
+        return await handleLineLoginStart(request, env);
       }
 
       if (request.method === "GET" && pathname === "/api/auth/line/callback") {
-        return handleLineCallback(request, env);
+        return await handleLineCallback(request, env);
       }
 
       if (request.method === "POST" && pathname === "/api/auth/dev-login") {
-        return handleDevLogin(request, env);
+        return await handleDevLogin(request, env);
       }
 
       if (request.method === "POST" && pathname === "/api/auth/logout") {
-        return handleLogout(request, env);
+        return await handleLogout(request, env);
       }
 
       if (request.method === "GET" && pathname === "/api/slots") {
-        return handleSlots(request, env);
+        return await handleSlots(request, env);
       }
 
       if (request.method === "GET" && pathname === "/api/bookings") {
-        return handleMyBookings(request, env);
+        return await handleMyBookings(request, env);
       }
 
       if (request.method === "POST" && pathname === "/api/bookings") {
-        return handleCreateBooking(request, env, ctx);
+        return await handleCreateBooking(request, env, ctx);
       }
 
       const bookingId = matchBookingCancel(pathname);
       if (request.method === "POST" && bookingId) {
-        return handleCancelMyBooking(request, env, decodeURIComponent(bookingId));
+        return await handleCancelMyBooking(request, env, ctx, decodeURIComponent(bookingId));
       }
 
       if (request.method === "GET" && pathname === "/api/admin/bookings") {
-        return handleAdminBookings(request, env);
+        return await handleAdminBookings(request, env);
       }
 
       const adminBookingId = matchAdminBookingCancel(pathname);
       if (request.method === "POST" && adminBookingId) {
-        return handleAdminCancelBooking(request, env, decodeURIComponent(adminBookingId));
+        return await handleAdminCancelBooking(request, env, ctx, decodeURIComponent(adminBookingId));
       }
 
       if (request.method === "POST" && pathname === "/api/admin/notify-today") {
-        return handleNotifyToday(request, env);
+        return await handleNotifyToday(request, env);
+      }
+
+      if (request.method === "POST" && pathname === "/api/admin/purge-old-bookings") {
+        return await handlePurgeOldBookings(request, env);
       }
 
       if (request.method === "POST" && pathname === "/api/line/webhook") {
-        return handleLineWebhook(request, env);
+        return await handleLineWebhook(request, env);
       }
 
       return notFound(request, env);
@@ -97,6 +102,6 @@ export default {
   },
 
   async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext) {
-    ctx.waitUntil(sendDailySummary(env));
+    ctx.waitUntil(Promise.allSettled([sendDailySummary(env), purgeExpiredBookingData(env)]));
   },
 } satisfies ExportedHandler<Env>;

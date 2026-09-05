@@ -12,7 +12,8 @@ head_sampling_rate = 1
 APP_ENV = "production"
 FRONTEND_URL = "https://kperfect-booking-api.mokjamkham.workers.dev"
 CORS_ORIGIN = "https://kperfect-booking-api.mokjamkham.workers.dev,https://kperfect-booking.pages.dev"
-BRANCH_NAME = "K Perfect Nimman"
+ADMIN_USER = "kperfect-staff"
+BRANCH_NAME = "K Perfect Nails - Nimman"
 SHOP_TIMEZONE = "Asia/Bangkok"
 SHOP_OPEN_TIME = "09:00"
 SHOP_CLOSE_TIME = "20:00"
@@ -23,6 +24,7 @@ MAX_BOOKINGS_PER_USER = "2"
 MAX_ADVANCE_DAYS = "7"
 ALLOW_SAME_DAY_BOOKING = "false"
 ENABLE_DEV_AUTH = "false"
+BOOKING_RETENTION_DAYS = "10"
 
 [secrets]
 required = [

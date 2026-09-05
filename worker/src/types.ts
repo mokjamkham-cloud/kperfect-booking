@@ -16,6 +16,7 @@ export type Booking = {
   startTime: string;
   endTime: string;
   seats: number;
+  serviceName: string;
   customerName: string;
   phone: string;
   notes: string | null;
@@ -55,6 +56,7 @@ export type DbBookingRow = {
   start_time: string;
   end_time: string;
   seats: number;
+  service_name: string | null;
   customer_name: string;
   phone: string;
   notes: string | null;

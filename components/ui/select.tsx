@@ -15,7 +15,7 @@ export function Select({ className, label, children, id, ...props }: SelectProps
       <select
         id={selectId}
         className={cn(
-          "min-h-11 rounded-md border border-slate-200 bg-white px-3 py-2 text-base outline-none transition focus:border-fern focus:ring-2 focus:ring-fern/15",
+          "min-h-11 rounded-md border border-stone-200 bg-white px-3 py-2 text-base outline-none transition focus:border-petal focus:ring-2 focus:ring-petal/15",
           className,
         )}
         {...props}

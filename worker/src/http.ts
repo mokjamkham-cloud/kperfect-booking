@@ -9,6 +9,7 @@ export class HttpError extends Error {
     this.name = "HttpError";
     this.status = status;
     this.details = details;
+    Object.setPrototypeOf(this, HttpError.prototype);
   }
 }
 
@@ -32,7 +33,7 @@ export function corsHeaders(request: Request, env: Env) {
     "Access-Control-Allow-Origin": allowOrigin,
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, x-admin-key",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization, x-admin-key",
     Vary: "Origin",
   };
 }
@@ -74,7 +75,7 @@ export function optionsResponse(request: Request, env: Env) {
 }
 
 export function errorResponse(error: unknown, request: Request, env: Env) {
-  if (error instanceof HttpError) {
+  if (isHttpError(error)) {
     return jsonResponse(
       {
         error: error.name,
@@ -96,6 +97,16 @@ export function errorResponse(error: unknown, request: Request, env: Env) {
     request,
     env,
     { status: 500 },
+  );
+}
+
+function isHttpError(error: unknown): error is HttpError {
+  return (
+    error instanceof HttpError ||
+    (error instanceof Error &&
+      error.name === "HttpError" &&
+      "status" in error &&
+      typeof (error as { status?: unknown }).status === "number")
   );
 }
 

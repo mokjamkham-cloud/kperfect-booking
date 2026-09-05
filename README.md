@@ -1,6 +1,6 @@
 # K Perfect Nails Online Booking
 
-ระบบจองคิวออนไลน์สำหรับ **K Perfect Nails and Spa สาขา K Perfect Nimman** ใช้ Next.js 15 เป็น frontend, Cloudflare Workers เป็น API และ web hosting, Cloudflare D1 เป็นฐานข้อมูล, LINE Login สำหรับลูกค้า และ LINE Messaging API สำหรับแจ้งเตือนทีมร้าน
+ระบบจองคิวออนไลน์สำหรับ **K Perfect Nails - Nimman** ใช้ Next.js 15 เป็น frontend, Cloudflare Workers เป็น API และ web hosting, Cloudflare D1 เป็นฐานข้อมูล, LINE Login สำหรับลูกค้า และ LINE Messaging API สำหรับแจ้งเตือนทีมร้าน
 
 ## Production URLs
 
@@ -18,8 +18,10 @@
 - Cloudflare Workers Static Assets สำหรับเสิร์ฟหน้าเว็บจาก Worker เดียวกับ API
 - Cloudflare D1 schema/migration สำหรับ users, bookings และ app settings
 - Booking rules ฝั่ง backend: จองล่วงหน้า 1-7 วัน, ไม่รับ same-day, รอบละ 2 ชั่วโมง, online capacity 2 ที่, ลูกค้า 1 คนมี active booking ได้สูงสุด 2 คิว
-- หน้า booking, my bookings, admin dashboard และ responsive UI
-- LINE Messaging API สำหรับแจ้งคิวใหม่, ส่ง confirmation ให้ลูกค้า และ cron สรุปคิวประจำวันเข้า LINE Group
+- หน้า booking, my bookings, staff dashboard แยกที่ `/staff` และ responsive UI
+- Dropdown เมนูบริการ: ทาสีเล็บเจล, ทาสีเล็บธรรมดา, สปามือ/เท้า, เพ้นท์เล็บ
+- LINE Messaging API สำหรับแจ้งคิวใหม่/ยกเลิกคิว, ส่ง confirmation ให้ลูกค้า และ cron สรุปคิวประจำวันเข้า LINE Group
+- Cron ล้าง booking เก่ากว่า `BOOKING_RETENTION_DAYS` วัน เพื่อลดข้อมูลค้างใน D1
 
 ## โครงสร้างหลัก
 
@@ -55,6 +57,7 @@ APP_ENV=development
 FRONTEND_URL=http://localhost:3000
 CORS_ORIGIN=http://localhost:3000
 ADMIN_API_KEY=change-this-admin-key
+ADMIN_USER=kperfect-staff
 SESSION_SECRET=replace-with-at-least-32-random-characters
 ENABLE_DEV_AUTH=true
 
@@ -65,7 +68,7 @@ LINE_MESSAGING_CHANNEL_ACCESS_TOKEN=
 LINE_MESSAGING_CHANNEL_SECRET=
 LINE_GROUP_ID=
 
-BRANCH_NAME=K Perfect Nimman
+BRANCH_NAME=K Perfect Nails - Nimman
 SHOP_TIMEZONE=Asia/Bangkok
 SHOP_OPEN_TIME=09:00
 SHOP_CLOSE_TIME=20:00
@@ -75,6 +78,7 @@ MAX_ONLINE_SEATS=2
 MAX_BOOKINGS_PER_USER=2
 MAX_ADVANCE_DAYS=7
 ALLOW_SAME_DAY_BOOKING=false
+BOOKING_RETENTION_DAYS=10
 ```
 
 รัน D1 local migration และเปิด dev servers:
@@ -144,6 +148,18 @@ npx wrangler secret put LINE_MESSAGING_CHANNEL_SECRET
 npx wrangler secret put LINE_GROUP_ID
 ```
 
+หน้า staff แบบไม่ใช้ password ใช้ค่า `ADMIN_USER` ใน `wrangler.toml` ค่าเริ่มต้นคือ:
+
+```txt
+kperfect-staff
+```
+
+ถ้าต้องการส่งเป็น token แบบ `user:` ให้ encode ค่า `kperfect-staff:` เป็น Base64 แล้วเปิด:
+
+```txt
+https://kperfect-booking-api.mokjamkham.workers.dev/staff?token=a3BlcmZlY3Qtc3RhZmY6
+```
+
 ค่า `LINE_LOGIN_REDIRECT_URI` ต้องเป็น:
 
 ```txt
@@ -162,6 +178,12 @@ npm run deploy:site
 
 ```txt
 https://kperfect-booking-api.mokjamkham.workers.dev
+```
+
+หน้า staff:
+
+```txt
+https://kperfect-booking-api.mokjamkham.workers.dev/staff
 ```
 
 ### 5. ตั้งค่า LINE Login
@@ -205,9 +227,10 @@ https://kperfect-booking-api.mokjamkham.workers.dev/api/line/webhook
 | GET | `/api/bookings` | ดูคิวของลูกค้า |
 | POST | `/api/bookings` | สร้าง booking |
 | POST | `/api/bookings/:id/cancel` | ลูกค้ายกเลิกคิว |
-| GET | `/api/admin/bookings` | admin ดูคิว |
+| GET | `/api/admin/bookings?month=YYYY-MM` | staff ดูคิวรายเดือน |
 | POST | `/api/admin/bookings/:id/cancel` | admin ยกเลิกคิว |
 | POST | `/api/admin/notify-today` | ส่งสรุปคิววันนี้เข้า LINE Group |
+| POST | `/api/admin/purge-old-bookings` | ล้าง booking เก่ากว่า retention |
 | POST | `/api/line/webhook` | รับ webhook จาก LINE |
 
 ## ตรวจคุณภาพก่อน deploy

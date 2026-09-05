@@ -10,6 +10,7 @@ import { Notice } from "@/components/ui/notice";
 import { Select } from "@/components/ui/select";
 import { api } from "@/lib/api";
 import { maxBookingDate, minBookingDate } from "@/lib/dates";
+import { BOOKING_SERVICES, DEFAULT_BOOKING_SERVICE } from "@/lib/services";
 import type { Slot, UserProfile } from "@/lib/types";
 
 export function BookingForm() {
@@ -19,9 +20,9 @@ export function BookingForm() {
   const [slots, setSlots] = useState<Slot[]>([]);
   const [startTime, setStartTime] = useState("");
   const [seats, setSeats] = useState(1);
+  const [serviceName, setServiceName] = useState<string>(DEFAULT_BOOKING_SERVICE);
   const [customerName, setCustomerName] = useState("");
   const [phone, setPhone] = useState("");
-  const [notes, setNotes] = useState("");
   const [loadingSlots, setLoadingSlots] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [message, setMessage] = useState<{ tone: "success" | "error" | "info"; text: string } | null>(null);
@@ -78,9 +79,9 @@ export function BookingForm() {
         bookingDate,
         startTime,
         seats,
+        serviceName,
         customerName,
         phone,
-        notes,
       });
       setMessage({
         tone: "success",
@@ -150,8 +151,15 @@ export function BookingForm() {
       </Card>
 
       <Card className="h-fit">
-        <CardHeader title="ข้อมูลผู้จอง" description="ใช้สำหรับยืนยันคิวและติดต่อกลับจากสาขานิมมาน" />
+          <CardHeader title="ข้อมูลผู้จอง" description="เลือกเมนูที่ต้องการ และกรอกข้อมูลสำหรับติดต่อกลับ" />
         <div className="grid gap-4">
+          <Select label="เมนูบริการ" name="serviceName" value={serviceName} onChange={(event) => setServiceName(event.target.value)}>
+            {BOOKING_SERVICES.map((service) => (
+              <option key={service} value={service}>
+                {service}
+              </option>
+            ))}
+          </Select>
           <Input label="ชื่อผู้จอง" name="customerName" value={customerName} onChange={(event) => setCustomerName(event.target.value)} required />
           <Input
             label="เบอร์โทรศัพท์"
@@ -162,18 +170,6 @@ export function BookingForm() {
             required
             helperText="ตัวอย่าง 0812345678"
           />
-          <label className="grid gap-2 text-sm font-medium text-slate-800" htmlFor="notes">
-            <span>หมายเหตุ</span>
-            <textarea
-              id="notes"
-              name="notes"
-              rows={4}
-              value={notes}
-              onChange={(event) => setNotes(event.target.value)}
-              className="rounded-md border border-slate-200 bg-white px-3 py-2 text-base outline-none transition focus:border-fern focus:ring-2 focus:ring-fern/15"
-            />
-          </label>
-
           {message ? <Notice tone={message.tone}>{message.text}</Notice> : null}
 
           <Button type="submit" disabled={submitting || !selectedSlot}>
@@ -181,9 +177,14 @@ export function BookingForm() {
             ยืนยันการจอง
           </Button>
 
-          <a className="inline-flex items-center gap-2 text-sm font-semibold text-fern" href="tel:053000000">
+          <a
+            className="inline-flex items-center gap-2 text-sm font-semibold text-fern"
+            href="https://linktr.ee/kperfectnailsandspa"
+            target="_blank"
+            rel="noreferrer"
+          >
             <PhoneCall className="h-4 w-4" aria-hidden="true" />
-            จองวันนี้กรุณาโทรที่ร้าน
+            จองวันนี้กรุณาโทรที่ร้าน / จองสาขาอื่น
           </a>
         </div>
       </Card>

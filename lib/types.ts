@@ -23,6 +23,7 @@ export type Booking = {
   startTime: string;
   endTime: string;
   seats: number;
+  serviceName: string;
   customerName: string;
   phone: string;
   notes?: string | null;
@@ -41,6 +42,7 @@ export type BookingPayload = {
   bookingDate: string;
   startTime: string;
   seats: number;
+  serviceName: string;
   customerName: string;
   phone: string;
   notes?: string;

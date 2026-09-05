@@ -20,6 +20,7 @@ export function mapBooking(row: DbBookingRow): Booking {
     startTime: row.start_time,
     endTime: row.end_time,
     seats: row.seats,
+    serviceName: row.service_name || "ทาสีเล็บเจล",
     customerName: row.customer_name,
     phone: row.phone,
     notes: row.notes,
@@ -93,8 +94,8 @@ export async function createBooking(
 ) {
   await env.DB.prepare(
     `INSERT INTO bookings (
-      id, user_id, branch_name, booking_date, start_time, end_time, seats, customer_name, phone, notes, status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      id, user_id, branch_name, booking_date, start_time, end_time, seats, service_name, customer_name, phone, notes, status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
   )
     .bind(
       booking.id,
@@ -104,6 +105,7 @@ export async function createBooking(
       booking.startTime,
       booking.endTime,
       booking.seats,
+      booking.serviceName,
       booking.customerName,
       booking.phone,
       booking.notes,
@@ -130,6 +132,18 @@ export async function getBookingById(env: Env, bookingId: string) {
   return row ? mapBooking(row) : null;
 }
 
+export async function getBookingWithUserById(env: Env, bookingId: string) {
+  const row = await env.DB.prepare(
+    `SELECT b.*, u.line_user_id, u.display_name, u.picture_url
+     FROM bookings b
+     JOIN users u ON u.id = b.user_id
+     WHERE b.id = ?`,
+  )
+    .bind(bookingId)
+    .first<DbBookingRow>();
+  return row ? mapBookingWithUser(row) : null;
+}
+
 export async function cancelBooking(env: Env, bookingId: string, reason: string) {
   await env.DB.prepare("UPDATE bookings SET status = 'cancelled', cancel_reason = ?, updated_at = datetime('now') WHERE id = ?")
     .bind(reason, bookingId)
@@ -137,13 +151,22 @@ export async function cancelBooking(env: Env, bookingId: string, reason: string)
   return getBookingById(env, bookingId);
 }
 
-export async function listAdminBookings(env: Env, params: { date?: string; status?: string }) {
+function nextMonth(month: string) {
+  const [year, monthNumber] = month.split("-").map(Number);
+  const date = new Date(Date.UTC(year, monthNumber, 1));
+  return date.toISOString().slice(0, 7);
+}
+
+export async function listAdminBookings(env: Env, params: { date?: string; month?: string; status?: string }) {
   const conditions: string[] = [];
   const values: string[] = [];
 
   if (params.date) {
     conditions.push("b.booking_date = ?");
     values.push(params.date);
+  } else if (params.month && /^\d{4}-\d{2}$/.test(params.month)) {
+    conditions.push("b.booking_date >= ? AND b.booking_date < ?");
+    values.push(`${params.month}-01`, `${nextMonth(params.month)}-01`);
   }
 
   if (params.status && params.status !== "all") {
@@ -176,4 +199,18 @@ export async function setSetting(env: Env, key: string, value: string) {
   )
     .bind(key, value)
     .run();
+}
+
+export async function purgeOldBookingData(env: Env, cutoffDate: string) {
+  const bookingResult = await env.DB.prepare("DELETE FROM bookings WHERE booking_date < ?").bind(cutoffDate).run();
+  const userResult = await env.DB.prepare(
+    `DELETE FROM users
+     WHERE id NOT IN (SELECT DISTINCT user_id FROM bookings)`,
+  ).run();
+
+  return {
+    cutoffDate,
+    deletedBookings: bookingResult.meta.changes || 0,
+    deletedUsers: userResult.meta.changes || 0,
+  };
 }

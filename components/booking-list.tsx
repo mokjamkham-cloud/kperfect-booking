@@ -86,6 +86,7 @@ export function BookingList() {
                 <p className="text-sm text-slate-600">
                   {booking.customerName} · {booking.phone} · {booking.seats} ที่
                 </p>
+                <p className="text-sm font-medium text-fern">{booking.serviceName}</p>
                 {booking.notes ? <p className="text-sm text-slate-500">{booking.notes}</p> : null}
               </div>
 

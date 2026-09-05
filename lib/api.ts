@@ -3,6 +3,7 @@ import type { AppConfig, Booking, BookingPayload, BookingWithUser, Slot, UserPro
 
 type RequestOptions = RequestInit & {
   adminKey?: string;
+  adminUser?: string;
 };
 
 export class ApiError extends Error {
@@ -24,6 +25,10 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 
   if (options.adminKey) {
     headers.set("x-admin-key", options.adminKey);
+  }
+
+  if (options.adminUser) {
+    headers.set("Authorization", `Basic ${btoa(`${options.adminUser}:`)}`);
   }
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
@@ -59,22 +64,29 @@ export const api = {
     request<{ booking: Booking }>(`/api/bookings/${encodeURIComponent(bookingId)}/cancel`, {
       method: "POST",
     }),
-  getAdminBookings: (params: { date?: string; status?: string; adminKey: string }) => {
+  getAdminBookings: (params: { date?: string; month?: string; status?: string; adminKey?: string; adminUser?: string }) => {
     const search = new URLSearchParams();
     if (params.date) search.set("date", params.date);
+    if (params.month) search.set("month", params.month);
     if (params.status) search.set("status", params.status);
     return request<{ bookings: BookingWithUser[] }>(`/api/admin/bookings?${search.toString()}`, {
       adminKey: params.adminKey,
+      adminUser: params.adminUser,
     });
   },
-  adminCancelBooking: (bookingId: string, adminKey: string) =>
+  adminCancelBooking: (bookingId: string, adminAuth: { adminKey?: string; adminUser?: string }) =>
     request<{ booking: Booking }>(`/api/admin/bookings/${encodeURIComponent(bookingId)}/cancel`, {
       method: "POST",
-      adminKey,
+      ...adminAuth,
     }),
-  sendTodaySummary: (adminKey: string) =>
+  sendTodaySummary: (adminAuth: { adminKey?: string; adminUser?: string }) =>
     request<{ ok: true; sent: boolean }>("/api/admin/notify-today", {
       method: "POST",
-      adminKey,
+      ...adminAuth,
+    }),
+  purgeOldBookings: (adminAuth: { adminKey?: string; adminUser?: string }) =>
+    request<{ ok: true; cutoffDate: string; deletedBookings: number; deletedUsers: number }>("/api/admin/purge-old-bookings", {
+      method: "POST",
+      ...adminAuth,
     }),
 };

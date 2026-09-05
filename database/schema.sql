@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS bookings (
   start_time TEXT NOT NULL,
   end_time TEXT NOT NULL,
   seats INTEGER NOT NULL DEFAULT 1 CHECK (seats BETWEEN 1 AND 2),
+  service_name TEXT NOT NULL DEFAULT 'ทาสีเล็บเจล',
   customer_name TEXT NOT NULL,
   phone TEXT NOT NULL,
   notes TEXT,

@@ -1,5 +1,5 @@
 export const SHOP_CONFIG = {
-  branchName: "K Perfect Nimman",
+  branchName: "K Perfect Nails - Nimman",
   timezone: "Asia/Bangkok",
   openTime: "09:00",
   closeTime: "20:00",

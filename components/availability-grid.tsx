@@ -25,7 +25,7 @@ export function AvailabilityGrid({ slots, selectedStartTime, onSelect }: Availab
             onClick={() => onSelect(slot)}
             className={cn(
               "grid min-h-24 gap-2 rounded-md border p-3 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-fern",
-              selected ? "border-fern bg-emerald-50" : "border-slate-200 bg-white hover:border-fern",
+              selected ? "border-petal bg-rose-50" : "border-stone-200 bg-white hover:border-petal",
               !slot.isAvailable && "cursor-not-allowed border-slate-100 bg-slate-50 text-slate-400 hover:border-slate-100",
             )}
           >

@@ -25,7 +25,7 @@ function booleanFromEnv(value: string | undefined, fallback: boolean) {
 
 export function getBookingConfig(env: Env): BookingConfig {
   return {
-    branchName: env.BRANCH_NAME || "K Perfect Nimman",
+    branchName: env.BRANCH_NAME || "K Perfect Nails - Nimman",
     timezone: env.SHOP_TIMEZONE || "Asia/Bangkok",
     openTime: env.SHOP_OPEN_TIME || "09:00",
     closeTime: env.SHOP_CLOSE_TIME || "20:00",
@@ -95,4 +95,14 @@ export function generateTimeSlots(config: BookingConfig) {
 export function isDateAllowed(date: string, config: BookingConfig) {
   const { minDate, maxDate } = getBookingWindow(config);
   return date >= minDate && date <= maxDate;
+}
+
+export function getBookingRetentionDays(env: Env) {
+  return numberFromEnv(env.BOOKING_RETENTION_DAYS, 10);
+}
+
+export function getBookingRetentionCutoffDate(env: Env) {
+  const timezone = env.SHOP_TIMEZONE || "Asia/Bangkok";
+  const today = dateStringInTimezone(new Date(), timezone);
+  return addDays(today, -getBookingRetentionDays(env));
 }

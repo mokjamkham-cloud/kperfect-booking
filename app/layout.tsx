@@ -3,8 +3,8 @@ import { SiteHeader } from "@/components/site-header";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "K Perfect Nails Booking",
-  description: "ระบบจองคิวออนไลน์สำหรับ K Perfect Nails and Spa สาขานิมมาน",
+  title: "K Perfect Nails - Nimman",
+  description: "จองคิวทำเล็บออนไลน์สำหรับ K Perfect Nails สาขานิมมาน",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

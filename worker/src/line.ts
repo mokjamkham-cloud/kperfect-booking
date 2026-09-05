@@ -77,15 +77,40 @@ async function replyLineMessage(env: Env, replyToken: string | undefined, text: 
   return response.ok;
 }
 
-async function getLineGroupId(env: Env) {
-  return env.LINE_GROUP_ID || (await getSetting(env, "line_group_id"));
+function isStaffLineTarget(value: string | null | undefined) {
+  return Boolean(value && /^[CR]/.test(value));
+}
+
+async function getLineStaffTargetId(env: Env) {
+  const configuredTarget = env.LINE_GROUP_ID;
+
+  if (isStaffLineTarget(configuredTarget)) {
+    return configuredTarget;
+  }
+
+  const savedTarget = await getSetting(env, "line_group_id");
+  if (isStaffLineTarget(savedTarget)) {
+    return savedTarget;
+  }
+
+  if (configuredTarget || savedTarget) {
+    console.warn(
+      JSON.stringify({
+        event: "line_staff_target_ignored",
+        reason: "LINE_GROUP_ID must be a group id starting with C or room id starting with R",
+      }),
+    );
+  }
+
+  return null;
 }
 
 export async function sendBookingConfirmation(env: Env, user: UserProfile, booking: Booking) {
   const text = [
-    "ยืนยันการจอง K Perfect Nails สาขานิมมาน",
+    "ยืนยันการจอง K Perfect Nails - Nimman",
     `วันที่: ${booking.bookingDate}`,
     `เวลา: ${booking.startTime} - ${booking.endTime} น.`,
+    `บริการ: ${booking.serviceName}`,
     `ชื่อ: ${booking.customerName}`,
     `จำนวน: ${booking.seats} ที่`,
   ].join("\n");
@@ -94,13 +119,14 @@ export async function sendBookingConfirmation(env: Env, user: UserProfile, booki
 }
 
 export async function sendBookingNoticeToGroup(env: Env, booking: Booking) {
-  const groupId = await getLineGroupId(env);
+  const groupId = await getLineStaffTargetId(env);
   if (!groupId) return false;
 
   const text = [
     "มีคิวจองออนไลน์ใหม่",
     `วันที่: ${booking.bookingDate}`,
     `เวลา: ${booking.startTime} - ${booking.endTime} น.`,
+    `บริการ: ${booking.serviceName}`,
     `ลูกค้า: ${booking.customerName}`,
     `โทร: ${booking.phone}`,
     `จำนวน: ${booking.seats} ที่`,
@@ -109,21 +135,51 @@ export async function sendBookingNoticeToGroup(env: Env, booking: Booking) {
   return pushLineMessage(env, groupId, text);
 }
 
+export async function sendBookingCancellationToUser(env: Env, booking: BookingWithUser, cancelledBy: string) {
+  const text = [
+    "แจ้งยกเลิกคิว K Perfect Nails - Nimman",
+    `วันที่: ${booking.bookingDate}`,
+    `เวลา: ${booking.startTime} - ${booking.endTime} น.`,
+    `บริการ: ${booking.serviceName}`,
+    `ชื่อ: ${booking.customerName}`,
+    `ยกเลิกโดย: ${cancelledBy}`,
+  ].join("\n");
+
+  await pushLineMessage(env, booking.lineUserId, text);
+}
+
+export async function sendBookingCancellationNoticeToGroup(env: Env, booking: BookingWithUser, cancelledBy: string) {
+  const groupId = await getLineStaffTargetId(env);
+  if (!groupId) return false;
+
+  const text = [
+    "มีการยกเลิกคิวออนไลน์",
+    `วันที่: ${booking.bookingDate}`,
+    `เวลา: ${booking.startTime} - ${booking.endTime} น.`,
+    `บริการ: ${booking.serviceName}`,
+    `ลูกค้า: ${booking.customerName}`,
+    `โทร: ${booking.phone}`,
+    `ยกเลิกโดย: ${cancelledBy}`,
+  ].join("\n");
+
+  return pushLineMessage(env, groupId, text);
+}
+
 function formatDailySummary(bookings: BookingWithUser[], date: string) {
   if (bookings.length === 0) {
-    return [`สรุปคิว K Perfect Nimman`, `วันที่ ${date}`, "วันนี้ยังไม่มีคิวออนไลน์"].join("\n");
+    return [`สรุปคิว K Perfect Nails - Nimman`, `วันที่ ${date}`, "วันนี้ยังไม่มีคิวออนไลน์"].join("\n");
   }
 
   const lines = bookings.map((booking, index) => {
-    return `${index + 1}. ${booking.startTime}-${booking.endTime} ${booking.customerName} (${booking.seats} ที่) โทร ${booking.phone}`;
+    return `${index + 1}. ${booking.startTime}-${booking.endTime} ${booking.customerName} / ${booking.serviceName} (${booking.seats} ที่) โทร ${booking.phone}`;
   });
 
-  return [`สรุปคิว K Perfect Nimman`, `วันที่ ${date}`, ...lines].join("\n");
+  return [`สรุปคิว K Perfect Nails - Nimman`, `วันที่ ${date}`, ...lines].join("\n");
 }
 
 export async function sendDailySummary(env: Env, date?: string) {
   const targetDate = date || dateStringInTimezone(new Date(), env.SHOP_TIMEZONE || "Asia/Bangkok");
-  const groupId = await getLineGroupId(env);
+  const groupId = await getLineStaffTargetId(env);
   if (!groupId) return false;
 
   const bookings = await listAdminBookings(env, { date: targetDate, status: "confirmed" });

@@ -4,6 +4,7 @@ import {
   countActiveUserBookings,
   createBooking,
   getBookingById,
+  getBookingWithUserById,
   getOverlappingSeatCount,
   listUserBookings,
   updateUserContact,
@@ -11,13 +12,20 @@ import {
 import type { Env } from "./env";
 import { requireUser } from "./auth";
 import { HttpError, jsonResponse, readJson } from "./http";
-import { sendBookingConfirmation, sendBookingNoticeToGroup } from "./line";
+import {
+  sendBookingCancellationNoticeToGroup,
+  sendBookingCancellationToUser,
+  sendBookingConfirmation,
+  sendBookingNoticeToGroup,
+} from "./line";
+import { normalizeBookingService } from "./services";
 import type { Slot } from "./types";
 
 type BookingPayload = {
   bookingDate?: string;
   startTime?: string;
   seats?: number;
+  serviceName?: string;
   customerName?: string;
   phone?: string;
   notes?: string;
@@ -81,9 +89,14 @@ export async function handleCreateBooking(request: Request, env: Env, ctx: Execu
   const customerName = cleanText(payload.customerName, 80);
   const phone = assertPhone(payload.phone);
   const seats = Number(payload.seats || 1);
+  const serviceName = normalizeBookingService(payload.serviceName);
 
   if (!customerName) {
     throw new HttpError(400, "กรุณากรอกชื่อผู้จอง");
+  }
+
+  if (!serviceName) {
+    throw new HttpError(400, "กรุณาเลือกเมนูบริการ");
   }
 
   if (!Number.isInteger(seats) || seats < 1 || seats > config.maxOnlineSeats) {
@@ -119,6 +132,7 @@ export async function handleCreateBooking(request: Request, env: Env, ctx: Execu
     startTime: slot.startTime,
     endTime: slot.endTime,
     seats,
+    serviceName,
     customerName,
     phone,
     notes: cleanText(payload.notes, 300) || null,
@@ -148,7 +162,7 @@ export async function handleMyBookings(request: Request, env: Env) {
   return jsonResponse({ bookings }, request, env);
 }
 
-export async function handleCancelMyBooking(request: Request, env: Env, bookingId: string) {
+export async function handleCancelMyBooking(request: Request, env: Env, ctx: ExecutionContext, bookingId: string) {
   const user = await requireUser(request, env);
   const booking = await getBookingById(env, bookingId);
 
@@ -165,5 +179,30 @@ export async function handleCancelMyBooking(request: Request, env: Env, bookingI
   }
 
   const cancelled = await cancelBooking(env, bookingId, "cancelled_by_customer");
+  if (!cancelled) throw new HttpError(500, "ยกเลิกคิวไม่สำเร็จ");
+
+  const bookingWithUser = await getBookingWithUserById(env, bookingId);
+  if (bookingWithUser) {
+    ctx.waitUntil(
+      Promise.allSettled([
+        sendBookingCancellationToUser(env, bookingWithUser, "ลูกค้า"),
+        sendBookingCancellationNoticeToGroup(env, bookingWithUser, "ลูกค้า"),
+      ]).then(logNotificationFailures),
+    );
+  }
+
   return jsonResponse({ booking: cancelled }, request, env);
+}
+
+function logNotificationFailures(results: PromiseSettledResult<unknown>[]) {
+  for (const result of results) {
+    if (result.status === "rejected") {
+      console.error(
+        JSON.stringify({
+          event: "booking_notification_failed",
+          reason: result.reason instanceof Error ? result.reason.message : String(result.reason),
+        }),
+      );
+    }
+  }
 }

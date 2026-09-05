@@ -12,7 +12,7 @@ function requireAdmin(request: Request, env: Env) {
   }
 
   const adminUser = readBasicAdminUser(request.headers.get("authorization"));
-  const expectedAdminUser = env.ADMIN_USER || "kperfect-staff";
+  const expectedAdminUser = env.ADMIN_USER || "admin";
 
   if (adminUser && timingSafeEqual(adminUser, expectedAdminUser)) {
     return;

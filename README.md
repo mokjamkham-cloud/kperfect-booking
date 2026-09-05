@@ -19,7 +19,7 @@
 - Cloudflare D1 schema/migration สำหรับ users, bookings และ app settings
 - Booking rules ฝั่ง backend: จองล่วงหน้า 1-7 วัน, ไม่รับ same-day, รอบละ 2 ชั่วโมง, online capacity 2 ที่, ลูกค้า 1 คนมี active booking ได้สูงสุด 2 คิว
 - หน้า booking, my bookings, staff dashboard แยกที่ `/staff` และ responsive UI
-- Dropdown เมนูบริการ: ทาสีเล็บเจล, ทาสีเล็บธรรมดา, สปามือ/เท้า, เพ้นท์เล็บ
+- Dropdown เมนูบริการ: ทาสีเล็บเจล, ทาสีเล็บธรรมดา, เพ้นท์เล็บ, ต่อเล็บ, เติมโคนเล็บ, ต่อขนตา, เติมขนตา, ลิฟติ้งขนตา, ย้อมขนตา/คิ้ว, ถอดเล็บ, ถอดขนตา, สปามือ/เท้า, แวกซ์
 - LINE Messaging API สำหรับแจ้งคิวใหม่/ยกเลิกคิว, ส่ง confirmation ให้ลูกค้า และ cron สรุปคิวประจำวันเข้า LINE Group
 - Cron ล้าง booking เก่ากว่า `BOOKING_RETENTION_DAYS` วัน เพื่อลดข้อมูลค้างใน D1
 
@@ -57,7 +57,7 @@ APP_ENV=development
 FRONTEND_URL=http://localhost:3000
 CORS_ORIGIN=http://localhost:3000
 ADMIN_API_KEY=change-this-admin-key
-ADMIN_USER=kperfect-staff
+ADMIN_USER=admin
 SESSION_SECRET=replace-with-at-least-32-random-characters
 ENABLE_DEV_AUTH=true
 
@@ -151,13 +151,13 @@ npx wrangler secret put LINE_GROUP_ID
 หน้า staff แบบไม่ใช้ password ใช้ค่า `ADMIN_USER` ใน `wrangler.toml` ค่าเริ่มต้นคือ:
 
 ```txt
-kperfect-staff
+admin
 ```
 
-ถ้าต้องการส่งเป็น token แบบ `user:` ให้ encode ค่า `kperfect-staff:` เป็น Base64 แล้วเปิด:
+ถ้าต้องการส่งเป็น token แบบ `user:` ให้ encode ค่า `admin:` เป็น Base64 แล้วเปิด:
 
 ```txt
-https://kperfect-booking-api.mokjamkham.workers.dev/staff?token=a3BlcmZlY3Qtc3RhZmY6
+https://kperfect-booking-api.mokjamkham.workers.dev/staff?token=YWRtaW46
 ```
 
 ค่า `LINE_LOGIN_REDIRECT_URI` ต้องเป็น:

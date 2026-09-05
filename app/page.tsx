@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { CalendarDays, CheckCircle2, Clock3, MapPin } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { SHOP_CONFIG } from "@/lib/config";
@@ -13,36 +14,37 @@ export default function HomePage() {
   return (
     <main>
       <section
-        className="relative min-h-[58vh] overflow-hidden bg-ink text-white"
+        className="relative min-h-[58vh] overflow-hidden border-b border-ink bg-white text-ink"
         style={{
           backgroundImage:
-            "linear-gradient(90deg, rgba(31,23,21,0.9), rgba(88,55,47,0.58), rgba(239,127,154,0.22)), url('https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=1600&q=80')",
+            "linear-gradient(90deg, rgba(255,255,255,0.96), rgba(255,255,255,0.78), rgba(255,255,255,0.28)), url('/kperfect-rich-menu.png')",
           backgroundPosition: "center",
           backgroundSize: "cover",
         }}
       >
         <div className="mx-auto flex min-h-[58vh] max-w-6xl flex-col justify-center gap-7 px-4 py-16 sm:px-6">
           <div className="max-w-2xl">
-            <p className="inline-flex items-center gap-2 text-sm font-bold text-rose-100">
+            <Image src="/kperfect-logo.png" alt="K Perfect Nails & Spa Nimman" width={180} height={180} className="mb-5 h-24 w-24 rounded-sm border border-ink bg-white object-contain p-1" priority />
+            <p className="inline-flex items-center gap-2 text-sm font-bold text-fern">
               <MapPin className="h-4 w-4" aria-hidden="true" />
               K Perfect Nails - Nimman
             </p>
-            <h1 className="mt-4 text-4xl font-black tracking-normal sm:text-5xl">K Perfect Nails - Nimman</h1>
-            <p className="mt-4 max-w-xl text-lg leading-8 text-slate-100">
-              จองคิวทำเล็บออนไลน์สำหรับสาขานิมมานแบบง่าย ๆ สาขาอื่นกรุณาโทรจองผ่านช่องทางร้าน
+            <h1 className="mt-4 font-serif text-4xl font-bold tracking-normal sm:text-5xl">K Perfect Nails - Nimman</h1>
+            <p className="mt-4 max-w-xl text-lg leading-8 text-stone-700">
+              จองคิวทำเล็บออนไลน์สำหรับสาขานิมมานเท่านั้น
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
             <Link
               href="/booking"
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-md bg-petal px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-500"
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-sm bg-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-black"
             >
               <CalendarDays className="h-4 w-4" aria-hidden="true" />
               จองคิว
             </Link>
             <Link
               href="/my-bookings"
-              className="inline-flex min-h-11 items-center justify-center rounded-md border border-white/70 bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:border-petal hover:text-petal"
+              className="inline-flex min-h-11 items-center justify-center rounded-sm border border-ink bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-stone-100"
             >
               คิวของฉัน
             </Link>
@@ -54,7 +56,7 @@ export default function HomePage() {
         {stats.map((item) => (
           <Card key={item.label}>
             <p className="text-sm font-semibold text-slate-500">{item.label}</p>
-            <p className="mt-2 text-2xl font-black text-ink">{item.value}</p>
+            <p className="mt-2 font-serif text-2xl font-bold text-ink">{item.value}</p>
           </Card>
         ))}
       </section>
@@ -64,7 +66,7 @@ export default function HomePage() {
           <div className="flex gap-3">
             <CheckCircle2 className="mt-1 h-5 w-5 shrink-0 text-fern" aria-hidden="true" />
             <div>
-              <h2 className="text-xl font-bold text-ink">กติกาการจอง</h2>
+              <h2 className="font-serif text-xl font-bold text-ink">กติกาการจอง</h2>
               <p className="mt-2 leading-7 text-slate-600">
                 จองล่วงหน้าได้ตั้งแต่วันถัดไปถึง 7 วัน ลูกค้า 1 คนมีคิวที่ยืนยันแล้วได้สูงสุด 2 คิว
               </p>
@@ -73,9 +75,9 @@ export default function HomePage() {
         </Card>
         <Card>
           <div className="flex gap-3">
-            <Clock3 className="mt-1 h-5 w-5 shrink-0 text-petal" aria-hidden="true" />
+            <Clock3 className="mt-1 h-5 w-5 shrink-0 text-fern" aria-hidden="true" />
             <div>
-              <h2 className="text-xl font-bold text-ink">จองวันนี้และสาขาอื่น</h2>
+              <h2 className="font-serif text-xl font-bold text-ink">จองวันนี้และสาขาอื่น</h2>
               <p className="mt-2 leading-7 text-slate-600">
                 ระบบออนไลน์ไม่รับ same-day booking เพื่อให้หน้าร้านจัดตารางได้แม่นยำ หากต้องการจองวันนี้หรือสาขาอื่นให้ติดต่อร้าน
               </p>

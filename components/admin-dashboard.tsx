@@ -13,6 +13,9 @@ import { api } from "@/lib/api";
 import { formatTimeRange } from "@/lib/dates";
 import type { BookingWithUser } from "@/lib/types";
 
+const DEFAULT_STAFF_USER = "admin";
+const STAFF_USER_STORAGE_KEY = "kperfect-admin-user-v2";
+
 function currentMonth() {
   return new Date().toISOString().slice(0, 7);
 }
@@ -37,7 +40,7 @@ function readUserFromUrl() {
 }
 
 export function AdminDashboard() {
-  const [adminUser, setAdminUser] = useState("");
+  const [adminUser, setAdminUser] = useState(DEFAULT_STAFF_USER);
   const [month, setMonth] = useState(currentMonth());
   const [status, setStatus] = useState("confirmed");
   const [bookings, setBookings] = useState<BookingWithUser[]>([]);
@@ -51,12 +54,10 @@ export function AdminDashboard() {
 
   useEffect(() => {
     const userFromUrl = readUserFromUrl();
-    const storedUser = window.localStorage.getItem("kperfect-admin-user");
-    const nextUser = userFromUrl || storedUser || "";
-    if (nextUser) {
-      setAdminUser(nextUser);
-      void loadBookings(nextUser);
-    }
+    const storedUser = window.localStorage.getItem(STAFF_USER_STORAGE_KEY);
+    const nextUser = userFromUrl || storedUser || DEFAULT_STAFF_USER;
+    setAdminUser(nextUser);
+    void loadBookings(nextUser);
   }, []);
 
   function adminAuth(nextAdminUser = adminUser) {
@@ -73,7 +74,7 @@ export function AdminDashboard() {
     setMessage(null);
 
     try {
-      window.localStorage.setItem("kperfect-admin-user", nextAdminUser);
+      window.localStorage.setItem(STAFF_USER_STORAGE_KEY, nextAdminUser);
       const result = await api.getAdminBookings({ month, status, ...adminAuth(nextAdminUser) });
       setBookings(result.bookings);
     } catch (error) {
@@ -129,7 +130,7 @@ export function AdminDashboard() {
             name="adminUser"
             value={adminUser}
             onChange={(event) => setAdminUser(event.target.value)}
-            placeholder="เช่น kperfect-staff"
+            placeholder="เช่น admin"
           />
           <Input label="เดือน" name="month" type="month" value={month} onChange={(event) => setMonth(event.target.value)} />
           <Select label="สถานะ" name="status" value={status} onChange={(event) => setStatus(event.target.value)}>
@@ -149,15 +150,15 @@ export function AdminDashboard() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <p className="text-sm font-semibold text-slate-500">เดือน</p>
-          <p className="mt-2 text-2xl font-black text-ink">{month}</p>
+          <p className="mt-2 font-serif text-2xl font-bold text-ink">{month}</p>
         </Card>
         <Card>
           <p className="text-sm font-semibold text-slate-500">จำนวนรายการ</p>
-          <p className="mt-2 text-3xl font-black text-petal">{bookings.length}</p>
+          <p className="mt-2 font-serif text-3xl font-bold text-ink">{bookings.length}</p>
         </Card>
         <Card>
           <p className="text-sm font-semibold text-slate-500">ที่นั่ง confirmed</p>
-          <p className="mt-2 text-3xl font-black text-fern">{confirmedSeats}</p>
+          <p className="mt-2 font-serif text-3xl font-bold text-fern">{confirmedSeats}</p>
         </Card>
       </div>
 

@@ -10,7 +10,7 @@ import { Notice } from "@/components/ui/notice";
 import { Select } from "@/components/ui/select";
 import { api } from "@/lib/api";
 import { maxBookingDate, minBookingDate } from "@/lib/dates";
-import { BOOKING_SERVICES, DEFAULT_BOOKING_SERVICE } from "@/lib/services";
+import { BOOKING_SERVICE_GROUPS, DEFAULT_BOOKING_SERVICE } from "@/lib/services";
 import type { Slot, UserProfile } from "@/lib/types";
 
 export function BookingForm() {
@@ -106,10 +106,10 @@ export function BookingForm() {
 
   if (!user) {
     return (
-        <Card>
-          <CardHeader title="กรุณาเข้าสู่ระบบก่อนจอง" description="ระบบรับจองออนไลน์ผ่าน LINE Login เพื่อผูกคิวกับบัญชีลูกค้า" />
-          <Notice tone="info">ใช้ปุ่ม LINE Login ด้านบนเพื่อเข้าสู่ระบบก่อนจองคิว</Notice>
-        </Card>
+      <Card>
+        <CardHeader title="กรุณาเข้าสู่ระบบก่อนจอง" description="ระบบรับจองออนไลน์ผ่าน LINE Login เพื่อผูกคิวกับบัญชีลูกค้า" />
+        <Notice tone="info">ใช้ปุ่ม LINE Login ด้านบนเพื่อเข้าสู่ระบบก่อนจองคิว</Notice>
+      </Card>
     );
   }
 
@@ -136,7 +136,7 @@ export function BookingForm() {
         </div>
 
         {loadingSlots ? (
-          <div className="flex min-h-32 items-center justify-center rounded-lg border border-slate-200 bg-white">
+          <div className="flex min-h-32 items-center justify-center rounded-sm border border-ink/20 bg-white">
             <Loader2 className="h-5 w-5 animate-spin text-fern" aria-hidden="true" />
           </div>
         ) : (
@@ -151,13 +151,17 @@ export function BookingForm() {
       </Card>
 
       <Card className="h-fit">
-          <CardHeader title="ข้อมูลผู้จอง" description="เลือกเมนูที่ต้องการ และกรอกข้อมูลสำหรับติดต่อกลับ" />
+        <CardHeader title="ข้อมูลผู้จอง" description="เลือกเมนูที่ต้องการ และกรอกข้อมูลสำหรับติดต่อกลับ" />
         <div className="grid gap-4">
           <Select label="เมนูบริการ" name="serviceName" value={serviceName} onChange={(event) => setServiceName(event.target.value)}>
-            {BOOKING_SERVICES.map((service) => (
-              <option key={service} value={service}>
-                {service}
-              </option>
+            {BOOKING_SERVICE_GROUPS.map((group) => (
+              <optgroup key={group.label} label={group.label}>
+                {group.services.map((service) => (
+                  <option key={service} value={service}>
+                    {service}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </Select>
           <Input label="ชื่อผู้จอง" name="customerName" value={customerName} onChange={(event) => setCustomerName(event.target.value)} required />

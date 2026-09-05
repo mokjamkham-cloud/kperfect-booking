@@ -21,7 +21,7 @@ export default function LoginCallbackPage() {
         <CheckCircle2 className="mb-5 h-10 w-10 text-fern" aria-hidden="true" />
         <Link
           href="/booking"
-          className="inline-flex min-h-11 items-center justify-center rounded-md bg-petal px-4 py-2 text-sm font-semibold text-white transition hover:bg-rose-600"
+          className="inline-flex min-h-11 items-center justify-center rounded-sm border border-ink bg-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-black"
         >
           ไปหน้าจองคิว
         </Link>

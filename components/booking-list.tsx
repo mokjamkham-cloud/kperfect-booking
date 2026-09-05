@@ -76,10 +76,10 @@ export function BookingList() {
       ) : (
         <div className="grid gap-3">
           {bookings.map((booking) => (
-            <article key={booking.id} className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <article key={booking.id} className="grid gap-3 rounded-sm border border-ink/20 bg-white p-4 sm:grid-cols-[minmax(0,1fr)_auto]">
               <div className="grid gap-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h2 className="text-lg font-bold text-ink">{formatThaiDate(booking.bookingDate)}</h2>
+                  <h2 className="font-serif text-lg font-bold text-ink">{formatThaiDate(booking.bookingDate)}</h2>
                   <StatusBadge status={booking.status} />
                 </div>
                 <p className="text-sm font-semibold text-slate-700">{formatTimeRange(booking.startTime, booking.endTime)}</p>

@@ -17,8 +17,8 @@ export default function HomePage() {
         className="relative min-h-[58vh] overflow-hidden border-b border-ink bg-white text-ink"
         style={{
           backgroundImage:
-            "linear-gradient(90deg, rgba(255,255,255,0.96), rgba(255,255,255,0.78), rgba(255,255,255,0.28)), url('/kperfect-rich-menu.png')",
-          backgroundPosition: "center",
+            "linear-gradient(90deg, rgba(255,255,255,0.96), rgba(255,255,255,0.78), rgba(255,255,255,0.2)), url('/real-beauty-talk.png')",
+          backgroundPosition: "center top",
           backgroundSize: "cover",
         }}
       >
